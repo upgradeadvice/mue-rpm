@@ -1,0 +1,85 @@
+diff -upr monetaryunit-0.9.2.1.orig/src/qt/intro.cpp monetaryunit-0.9.2.1/src/qt/intro.cpp
+--- monetaryunit-0.9.2.1.orig/src/qt/intro.cpp	2014-06-19 07:51:15.000000000 +0000
++++ monetaryunit-0.9.2.1/src/qt/intro.cpp	2014-07-20 13:41:45.827578942 +0000
+@@ -146,7 +146,20 @@ void Intro::setDataDirectory(const QStri
+ 
+ QString Intro::getDefaultDataDirectory()
+ {
+-    return GUIUtil::boostPathToQString(GetDefaultDataDir());
++    // FIXME This is a bit of duplicate code, and doesn't cover every place the
++    // default data directory might be requested, such as debug logs, but doing
++    // this "right" requires major refactoring of other parts of MonetaryUnit. This
++    // gets us far enough that the datadir will be stored in QSettings and in
++    // the arguments and after that we don't really have to worry about it.
++    namespace fs = boost::filesystem;
++    fs::path pathRet;
++    char *pszHome = getenv("HOME");
++    if (pszHome == NULL || strlen(pszHome) == 0)
++        pathRet = fs::path("/");
++    else
++        pathRet = fs::path(pszHome);
++    pathRet /= ".monetaryunit";
++    return GUIUtil::boostPathToQString(pathRet);
+ }
+ 
+ void Intro::pickDataDirectory()
+@@ -193,8 +206,18 @@ void Intro::pickDataDirectory()
+      * override -datadir in the monetaryunit.conf file in the default data directory
+      * (to be consistent with monetaryunitd behavior)
+      */
+-    if(dataDir != getDefaultDataDirectory())
++    // FIXME We always override this to avoid issues with GetDataDir() later.
++    // The behavior being changed is rarely used, and not particularly needed
++    // here since our monetaryunitd maintains a separate wallet anyway. Doing this
++    // "right" requires major refactoring.
++    // if(dataDir != getDefaultDataDirectory())
+         SoftSetArg("-datadir", GUIUtil::qstringToBoostPath(dataDir).string()); // use OS locale for path setting
++    // FIXME We also override the default conf file location here in order that
++    // libmonetaryunit code does not attempt to give us a configuration file in the
++    // wrong directory. Doing this "right" requires major refactoring.
++    fs::path confFile = dataDir.toStdString();
++    confFile /= "monetaryunit.conf";
++    SoftSetArg("-conf", confFile.string());
+ }
+ 
+ void Intro::setStatus(int status, const QString &message, quint64 bytesAvailable)
+diff -upr monetaryunit-0.9.2.orig/src/util.cpp monetaryunit-0.9.2/src/util.cpp
+--- monetaryunit-0.9.2.orig/src/util.cpp	2014-06-13 10:26:02.000000000 +0000
++++ monetaryunit-0.9.2/src/util.cpp	2014-06-17 13:24:19.316770097 +0000
+@@ -944,7 +944,8 @@ boost::filesystem::path GetDefaultDataDi
+     // Windows < Vista: C:\Documents and Settings\Username\Application Data\MonetaryUnit
+     // Windows >= Vista: C:\Users\Username\AppData\Roaming\MonetaryUnit
+     // Mac: ~/Library/Application Support/MonetaryUnit
+-    // Unix: ~/.monetaryunit
++    // Unix: /var/lib/monetaryunit
++    // Unix GUI: ~/.monetaryunit (see src/qt/intro.cpp)
+ #ifdef WIN32
+     // Windows
+     return GetSpecialFolderPath(CSIDL_APPDATA) / "MonetaryUnit";
+@@ -962,7 +963,7 @@ boost::filesystem::path GetDefaultDataDi
+     return pathRet / "MonetaryUnit";
+ #else
+     // Unix
+-    return pathRet / ".monetaryunit";
++    return fs::path("/var/lib/monetaryunit");
+ #endif
+ #endif
+ }
+@@ -1012,7 +1013,7 @@ void ClearDatadirCache()
+ boost::filesystem::path GetConfigFile()
+ {
+     boost::filesystem::path pathConfigFile(GetArg("-conf", "monetaryunit.conf"));
+-    if (!pathConfigFile.is_complete()) pathConfigFile = GetDataDir(false) / pathConfigFile;
++    if (!pathConfigFile.is_complete()) pathConfigFile = boost::filesystem::path("/etc/monetaryunit") / pathConfigFile;
+     return pathConfigFile;
+ }
+ 
+@@ -1045,7 +1046,7 @@ void ReadConfigFile(map<string, string>&
+ boost::filesystem::path GetPidFile()
+ {
+     boost::filesystem::path pathPidFile(GetArg("-pid", "monetaryunitd.pid"));
+-    if (!pathPidFile.is_complete()) pathPidFile = GetDataDir() / pathPidFile;
++    if (!pathPidFile.is_complete()) pathPidFile = boost::filesystem::path("/var/run") / pathPidFile;
+     return pathPidFile;
+ }
+ 

@@ -1,0 +1,11 @@
+[Unit]
+Description=MonetaryUnit daemon
+After=syslog.target network.target
+
+[Service]
+ExecStart=/usr/sbin/monetaryunitd
+User=monetaryunit
+Group=monetaryunit
+
+[Install]
+WantedBy=multi-user.target

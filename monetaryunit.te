@@ -1,0 +1,75 @@
+policy_module(monetaryunit, 1.63.2)
+
+########################################
+#
+# Declarations
+#
+
+type monetaryunit_t;
+type monetaryunit_exec_t;
+init_daemon_domain(monetaryunit_t, monetaryunit_exec_t)
+
+permissive monetaryunit_t;
+
+type monetaryunit_initrc_exec_t;
+init_script_file(monetaryunit_initrc_exec_t)
+
+type monetaryunit_conf_t;
+files_type(monetaryunit_conf_t)
+
+type monetaryunit_var_lib_t;
+files_type(monetaryunit_var_lib_t)
+
+type monetaryunit_port_t;
+corenet_port(monetaryunit_port_t)
+
+########################################
+#
+# monetaryunit local policy
+#
+allow monetaryunit_t self:process { fork };
+
+allow monetaryunit_t self:fifo_file rw_fifo_file_perms;
+allow monetaryunit_t self:unix_stream_socket create_stream_socket_perms;
+
+manage_dirs_pattern(monetaryunit_t, monetaryunit_conf_t, monetaryunit_conf_t)
+manage_files_pattern(monetaryunit_t, monetaryunit_conf_t, monetaryunit_conf_t)
+
+manage_dirs_pattern(monetaryunit_t, monetaryunit_var_lib_t, monetaryunit_var_lib_t)
+manage_files_pattern(monetaryunit_t, monetaryunit_var_lib_t, monetaryunit_var_lib_t)
+files_var_lib_filetrans(monetaryunit_t, monetaryunit_var_lib_t, { dir file })
+
+sysnet_dns_name_resolve(monetaryunit_t)
+corenet_all_recvfrom_unlabeled(monetaryunit_t)
+
+allow monetaryunit_t self:tcp_socket create_stream_socket_perms;
+corenet_tcp_sendrecv_generic_if(monetaryunit_t)
+corenet_tcp_sendrecv_generic_node(monetaryunit_t)
+corenet_tcp_sendrecv_all_ports(monetaryunit_t)
+corenet_tcp_bind_generic_node(monetaryunit_t)
+
+gen_require(`
+    type monetaryunit_port_t;
+')
+allow monetaryunit_t monetaryunit_port_t:tcp_socket name_bind;
+
+gen_require(`
+    type monetaryunit_port_t;
+')
+allow monetaryunit_t monetaryunit_port_t:tcp_socket name_connect;
+
+domain_use_interactive_fds(monetaryunit_t)
+
+files_read_etc_files(monetaryunit_t)
+
+miscfiles_read_localization(monetaryunit_t)
+
+sysnet_dns_name_resolve(monetaryunit_t)
+
+allow monetaryunit_t monetaryunit_exec_t:file execute_no_trans;
+allow monetaryunit_t self:process setsched;
+corecmd_exec_ls(monetaryunit_t)
+corenet_tcp_connect_http_port(monetaryunit_t)
+dev_read_urand(monetaryunit_t)
+fs_getattr_xattr_fs(monetaryunit_t)
+kernel_read_system_state(monetaryunit_t)

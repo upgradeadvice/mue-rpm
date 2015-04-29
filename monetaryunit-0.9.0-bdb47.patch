@@ -1,0 +1,23 @@
+diff -up monetaryunit-0.9.0/src/m4/monetaryunit_find_bdb48.m4.bdb47 monetaryunit-0.9.0/src/m4/monetaryunit_find_bdb48.m4
+--- monetaryunit-0.9.0/src/m4/monetaryunit_find_bdb48.m4.bdb47	2014-03-16 10:05:28.000000000 +0000
++++ monetaryunit-0.9.0/src/m4/monetaryunit_find_bdb48.m4	2014-03-20 03:52:57.698069000 +0000
+@@ -5,7 +5,7 @@
+   bdbpath=X
+   bdb48path=X
+   bdbdirlist=
+-  for _vn in 4.8 48 4 5 ''; do
++  for _vn in 4.8 48 4.7 47 4 5 ''; do
+     for _pfx in b lib ''; do
+       bdbdirlist="$bdbdirlist ${_pfx}db${_vn}"
+     done
+@@ -15,8 +15,8 @@
+     AC_TRY_COMPILE([
+       #include <${searchpath}db_cxx.h>
+     ],[
+-      #if !((DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 8) || DB_VERSION_MAJOR > 4)
+-        #error "failed to find bdb 4.8+"
++      #if !((DB_VERSION_MAJOR == 4 && DB_VERSION_MINOR >= 7) || DB_VERSION_MAJOR > 4)
++        #error "failed to find bdb 4.7+"
+       #endif
+     ],[
+       if test "x$bdbpath" = "xX"; then

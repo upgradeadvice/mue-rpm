@@ -1,0 +1,12 @@
+Using monetaryunit-cli on Fedora and Red Hat Enterprise Linux
+========================================================
+
+The monetaryunit-cli command allows you to communicate with a running MonetaryUnit
+daemon on a local or remote host.
+
+Configuration
+-------------
+
+By default monetaryunit-cli looks for configuration at /etc/monetaryunit/monetaryunit.conf.
+This must be readable only by users authorized to communicate with monetaryunitd.
+See the README file included with monetaryunit-server for further details.
